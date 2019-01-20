@@ -2,7 +2,7 @@
   <v-app>
     <v-toolbar app>
       <v-toolbar-title class="headline text-uppercase">
-        <span>Search Music 🎵</span>
+        <span >Search Music 🎵</span>
       </v-toolbar-title>
     </v-toolbar>
 

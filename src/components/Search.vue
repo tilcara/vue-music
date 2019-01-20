@@ -1,36 +1,53 @@
 <template lang="html">
   <v-container>
-    <v-form>
+    <v-form v-model="valid">
       <v-layout>
         <v-flex xs12 md4>
           <v-text-field
             v-model="query"
             label="Artist name"
             required
+            @keyup.enter="search"
+            :rules="nameRules"
           ></v-text-field>
         </v-flex>
       </v-layout>
       <v-layout>
         <v-btn color="success" @click="search">Search</v-btn>
+        <v-btn color="error" @click.prevent="reset">Clean</v-btn>
       </v-layout>
     </v-form>
     <v-layout>
       <v-flex xs12 sm6 offset-sm3>
-        <v-card>
+        <small>{{ found }}</small>
+        <div class="text-xs-center" v-show="isLoading">
+          <v-progress-circular
+            :size="70"
+            :width="7"
+            color="purple"
+            indeterminate
+          ></v-progress-circular>
+        </div>
+        <h2 v-if="results.length === 0">
+          No results found
+        </h2>
+        <v-card v-for="result in results" :key="result.id">
           <v-img
-            src="https://cdn.vuetifyjs.com/images/cards/desert.jpg"
+            v-if="result.images.length"
+            :src="result.images[0].url"
+            :alt="result.name"
             aspect-ratio="2.75"
           ></v-img>
           <v-card-title primary-title>
             <div>
-              <h3 class="headline mb-0">Kangaroo Valley Safari</h3>
-              <div>Located two hours south of Sydney in the <br>Southern Highlands of New South Wales, ...</div>
+              <h3 class="headline mb-0">{{ result.name }}</h3>
             </div>
           </v-card-title>
           <v-card-actions>
-            <v-btn flat color="orange">Share</v-btn>
-            <v-btn flat color="orange">Explore</v-btn>
+            <v-btn :href="result.external_urls.spotify" flat color="orange" target="_blank">Abrir en el explorador</v-btn>
+            <v-btn :href="result.uri" flat color="orange">Abrir en la app</v-btn>
           </v-card-actions>
+          <hr><hr><hr>
         </v-card>
       </v-flex>
     </v-layout>
@@ -45,18 +62,47 @@ export default {
   data () {
     return {
       query: '',
-      results: []
+      results: [],
+      isLoading: false,
+      valid: false,
+      nameRules: [
+        v => !!v || 'Name is required'
+      ]
     }
   },
   methods: {
     search () {
-      spotify.search(this.query, 'artist')
-        .then((res) => {
-          this.results = res.artists.items
-          console.log(this.results)
-        })
+      if (this.query !== '') {
+        this.isLoading = true
+        spotify.search(this.query, 'artist')
+          .then((res) => {
+            this.results = res.artists.items
+            console.log(this.results)
+            this.isLoading = false
+          })
+      }
+    },
+    reset () {
+      this.query = ''
+      this.results = []
+    }
+  },
+  computed: {
+    found () {
+      return this.results.length
+        ? `${this.results.length} results` : ''
+    }
+  },
+  watch: {
+    query (newData, oldData) {
+      console.log(newData)
     }
   }
 }
 
 </script>
+
+<style lang="stylus" scoped>
+  .v-progress-circular
+    margin: 1rem
+</style>
